@@ -53,6 +53,22 @@ jobs:
         with:
           version: v1.59
 
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Install gosec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+      - name: Run gosec
+        run: gosec -exclude=G107 ./...
+
   docker:
     name: Docker Build
     runs-on: ubuntu-latest
