@@ -1,0 +1,33 @@
+run:
+  timeout: 5m
+  go: "1.22"
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - gosimple
+    - ineffassign
+    - unused
+    - gosec
+    - gocritic
+    - gofmt
+    - misspell
+    - unconvert
+    - unparam
+
+linters-settings:
+  gosec:
+    excludes:
+      - G107  # URL provided to HTTP request as taint input — intentional in healthcheck/waitfor
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gosec
