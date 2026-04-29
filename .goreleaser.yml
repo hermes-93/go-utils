@@ -1,0 +1,53 @@
+version: 2
+
+project_name: go-utils
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - id: devops
+    main: ./
+    binary: devops
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: default
+    name_template: "devops_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE*
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^chore:"
+      - "^docs:"
+      - Merge pull request
+      - Merge branch
+
+release:
+  github:
+    owner: hermes-93
+    name: go-utils
+  draft: false
+  prerelease: auto
+  name_template: "v{{.Version}}"
