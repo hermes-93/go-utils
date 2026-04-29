@@ -44,7 +44,9 @@ func TestParseFile(t *testing.T) {
 	}
 	defer os.Remove(f.Name())
 
-	f.WriteString("# comment\n\nDB_HOST=\nDB_PORT=5432\nSECRET_KEY\n  SPACED  \n")
+	if _, err := f.WriteString("# comment\n\nDB_HOST=\nDB_PORT=5432\nSECRET_KEY\n  SPACED  \n"); err != nil {
+		t.Fatal(err)
+	}
 	f.Close()
 
 	vars, err := env.ParseFile(f.Name())
