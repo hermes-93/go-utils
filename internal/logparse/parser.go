@@ -37,8 +37,12 @@ func (p *Parser) Process(scanner *bufio.Scanner, out io.Writer) {
 		if line == "" {
 			continue
 		}
-		var raw map[string]interface{}
-		if err := json.Unmarshal([]byte(line), &raw); err != nil {
+
+		raw := tryParseJSON(line)
+		if raw == nil {
+			raw = tryParseLogfmt(line)
+		}
+		if raw == nil {
 			fmt.Fprintf(out, "[raw] %s\n", line)
 			continue
 		}
@@ -57,6 +61,64 @@ func (p *Parser) Process(scanner *bufio.Scanner, out io.Writer) {
 			p.printText(out, raw)
 		}
 	}
+}
+
+func tryParseJSON(line string) map[string]interface{} {
+	var raw map[string]interface{}
+	if err := json.Unmarshal([]byte(line), &raw); err != nil {
+		return nil
+	}
+	return raw
+}
+
+// tryParseLogfmt parses lines in key=value or key="value with spaces" format.
+func tryParseLogfmt(line string) map[string]interface{} {
+	if !strings.Contains(line, "=") {
+		return nil
+	}
+	raw := make(map[string]interface{})
+	i := 0
+	for i < len(line) {
+		for i < len(line) && line[i] == ' ' {
+			i++
+		}
+		start := i
+		for i < len(line) && line[i] != '=' && line[i] != ' ' {
+			i++
+		}
+		key := line[start:i]
+		if key == "" || i >= len(line) || line[i] != '=' {
+			return nil
+		}
+		i++
+
+		var value string
+		if i < len(line) && line[i] == '"' {
+			i++
+			start = i
+			for i < len(line) && line[i] != '"' {
+				if line[i] == '\\' {
+					i++
+				}
+				i++
+			}
+			value = line[start:i]
+			if i < len(line) {
+				i++
+			}
+		} else {
+			start = i
+			for i < len(line) && line[i] != ' ' {
+				i++
+			}
+			value = line[start:i]
+		}
+		raw[key] = value
+	}
+	if len(raw) == 0 {
+		return nil
+	}
+	return raw
 }
 
 func (p *Parser) printText(out io.Writer, raw map[string]interface{}) {
