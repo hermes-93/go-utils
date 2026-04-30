@@ -10,7 +10,8 @@ import (
 
 func Envcheck(args []string) {
 	fs := flag.NewFlagSet("envcheck", flag.ExitOnError)
-	file := fs.String("file", "", "Path to .env.example listing required variable names")
+	file  := fs.String("file", "", "Path to .env.example listing required variable names")
+	quiet := fs.Bool("quiet", false, "Only print missing variables (suppress OK lines)")
 	fs.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: devops envcheck [flags] [VAR...]")
 		fmt.Fprintln(os.Stderr, "\nFlags:")
@@ -40,7 +41,7 @@ func Envcheck(args []string) {
 		if contains(missing, v) {
 			fmt.Printf("MISSING %s\n", v)
 			exitCode = 1
-		} else {
+		} else if !*quiet {
 			fmt.Printf("OK      %s\n", v)
 		}
 	}
